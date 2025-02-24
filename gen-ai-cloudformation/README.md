@@ -24,7 +24,7 @@ Before deploying the CloudFormation templates, ensure you have the following:
 
 ### Creating OpenSearch Collection Index
 
-After deploying the `knowledge-base.yaml` stack, you need to manually create an OpenSearch collection index with the following settings:
+After deploying the `base-infra.yaml` stack, you need to manually create an OpenSearch collection index with the following settings:
 
 1. Open the OpenSearch Dashboards and navigate to the "collection" section, choose created "collection".
 2. Go to the JSON field in INDEXES and run the following JSON in the json index field to create the index, also add name below to the index field:
