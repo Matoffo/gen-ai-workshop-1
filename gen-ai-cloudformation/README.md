@@ -29,7 +29,7 @@ After deploying the `base-infra.yaml` stack, you need to manually create an Open
 1. Open the OpenSearch Dashboards and navigate to the "collection" section, choose created "collection".
 2. Go to the JSON field in INDEXES and run the following JSON in the json index field to create the index, also add name below to the index field:
 
-Index Name: `genai-vectors-collection`
+Index Name (mandatory): `genai-vectors-collection`
 
   ```json
   {
