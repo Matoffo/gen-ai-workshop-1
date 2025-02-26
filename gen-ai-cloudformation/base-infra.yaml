@@ -119,7 +119,7 @@ Resources:
         - IpProtocol: tcp
           FromPort: 3000 # Flowise UI port
           ToPort: 3000
-          CidrIp: 0.0.0.0/0
+          CidrIp: 10.0.0.0/20
         - IpProtocol: tcp
           FromPort: 22 # SSH port for EC2 instance coonect
           ToPort: 22
