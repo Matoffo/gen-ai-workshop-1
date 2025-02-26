@@ -22,7 +22,8 @@ Parameters:
 Mappings:
   RegionMap:
     us-east-1:
-      "AMI": "ami-04b4f1a9cf54c11d0" # Ubuntu 24.04
+      #      "AMI": "ami-04b4f1a9cf54c11d0"     # Ubuntu 24.04 - default AMI
+      "AMI": "ami-0ec2a8bab9cc7a3ea" # Ubuntu 24.04 - custom Flowise AMI
 
 Resources:
   # VPC and Network Configuration
@@ -140,16 +141,10 @@ Resources:
           Ebs:
             VolumeSize: 50 # 50GB
             DeleteOnTermination: true
-      UserData: # Install Flowise and start the service
+      UserData: # Start the Flowise service on instance launch
         Fn::Base64: !Sub |
           #!/bin/bash
-          apt update -y
-          apt install -y npm
-          curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash
-          \. "$HOME/.nvm/nvm.sh"
-          nvm install 20
-          npm install -g flowise
-          npx flowise start
+          npx flowise start --DEBUG=true
 
       Tags:
         - Key: Name
