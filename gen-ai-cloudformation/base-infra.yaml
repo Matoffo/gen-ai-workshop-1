@@ -295,7 +295,6 @@ Resources:
           Value: !Sub ${ProjectName}-notebook-sg
 
   # SageMaker Notebook
-
   WorkshopNotebookInstance:
     Type: "AWS::SageMaker::NotebookInstance"
     Properties:
@@ -304,7 +303,32 @@ Resources:
       SecurityGroupIds:
         - !GetAtt WorkshopNotebookSecurityGroup.GroupId
       InstanceType: !Ref WorkshopNotebookInstanceType
+      VolumeSizeInGB: 30
       RoleArn: !GetAtt WorkshopNotebookRole.Arn
+      DefaultCodeRepository: "https://github.com/Matoffo/gen-ai-workshop-1.git"
+
+SageMakerLifecycleConfig:
+  Type: AWS::SageMaker::NotebookInstanceLifecycleConfig
+  Properties:
+    NotebookInstanceLifecycleConfigName: "InitNotebookConfig"
+    OnStart:
+      - Content:
+          Fn::Base64: !Sub |
+            #!/bin/bash
+            set -e
+
+            echo "Cloning repo..."
+            cd /home/ec2-user/SageMaker
+            git clone https://github.com/Matoffo/gen-ai-workshop-1.git
+
+            cd gen-ai-workshop-1/notebooks
+
+            echo "Installing dependencies..."
+            pip install -r requirements.txt || true
+
+            echo "Running notebook..."
+            NOTEBOOK_PATH="InitNotebookConfig.ipynb"
+            sudo -u ec2-user nohup jupyter nbconvert --execute --inplace $NOTEBOOK_PATH > /tmp/notebook.log 2>&1 &
 
   WorkshopNotebookRole:
     Type: "AWS::IAM::Role"
@@ -334,6 +358,38 @@ Resources:
                 Resource:
                   - !GetAtt DocumentBucket.Arn
                   - !Sub "${DocumentBucket.Arn}/*"
+        - PolicyName: SecurityGroupModification
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - ec2:AuthorizeSecurityGroupIngress
+                  - ec2:RevokeSecurityGroupIngress
+                  - ec2:DescribeSecurityGroups
+                Resource: "*"
+        - PolicyName: OpenSearchAccess
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - aoss:APIAccessAll
+                Resource:
+                  - !Sub "${VectorCollection.Arn}"
+        - PolicyName: KnowledgeBaseSync
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - bedrock:ListFoundationModels
+                  - bedrock:ListCustomModels
+                  - bedrock:InvokeModel
+                Resource:
+                  - !Sub "arn:aws:bedrock:${AWS::Region}::foundation-model/amazon.titan-embed-text-v1"
+                  - !Sub "arn:aws:bedrock:${AWS::Region}::foundation-model/cohere.embed-english-v3"
+                  - !Sub "arn:aws:bedrock:${AWS::Region}::foundation-model/cohere.embed-multilingual-v3"
       Path: "/"
       ManagedPolicyArns:
         - !Sub "arn:${AWS::Partition}:iam::aws:policy/AmazonSageMakerFullAccess"
