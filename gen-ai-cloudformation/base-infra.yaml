@@ -307,29 +307,6 @@ Resources:
       RoleArn: !GetAtt WorkshopNotebookRole.Arn
       DefaultCodeRepository: "https://github.com/Matoffo/gen-ai-workshop-1.git"
 
-SageMakerLifecycleConfig:
-  Type: AWS::SageMaker::NotebookInstanceLifecycleConfig
-  Properties:
-    NotebookInstanceLifecycleConfigName: "InitNotebookConfig"
-    OnStart:
-      - Content:
-          Fn::Base64: !Sub |
-            #!/bin/bash
-            set -e
-
-            echo "Cloning repo..."
-            cd /home/ec2-user/SageMaker
-            git clone https://github.com/Matoffo/gen-ai-workshop-1.git
-
-            cd gen-ai-workshop-1/notebooks
-
-            echo "Installing dependencies..."
-            pip install -r requirements.txt || true
-
-            echo "Running notebook..."
-            NOTEBOOK_PATH="InitNotebookConfig.ipynb"
-            sudo -u ec2-user nohup jupyter nbconvert --execute --inplace $NOTEBOOK_PATH > /tmp/notebook.log 2>&1 &
-
   WorkshopNotebookRole:
     Type: "AWS::IAM::Role"
     Properties:
