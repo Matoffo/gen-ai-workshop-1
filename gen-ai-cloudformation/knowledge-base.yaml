@@ -1,0 +1,41 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "CloudFormation template for GenAI Workshop infrastructure with Knowledge Base"
+
+Parameters:
+  ProjectName:
+    Type: String
+    Default: genai-workshop
+    Description: Project name for resource tagging
+
+Resources:
+  #Vector Store Configuration
+  KnowledgeBaseVectorStore:
+    Type: AWS::Bedrock::KnowledgeBase
+    Properties:
+      Name: gen-ai-workshop-kb
+      RoleArn: !ImportValue BedrockVectorStoreRoleArn
+      KnowledgeBaseConfiguration:
+        Type: VECTOR
+        VectorKnowledgeBaseConfiguration:
+          EmbeddingModelArn: !Sub "arn:${AWS::Partition}:bedrock:${AWS::Region}::foundation-model/amazon.titan-embed-text-v1"
+      StorageConfiguration:
+        Type: "OPENSEARCH_SERVERLESS"
+        OpensearchServerlessConfiguration:
+          CollectionArn: !ImportValue VectorCollectionArn
+          VectorIndexName: "genai-vectors-collection"
+          FieldMapping:
+            VectorField: "vector-field"
+            TextField: "text"
+            MetadataField: "metadata"
+
+  S3DataSource:
+    Type: AWS::Bedrock::DataSource
+    Properties:
+      KnowledgeBaseId: !Ref KnowledgeBaseVectorStore
+      Name: !Sub ${ProjectName}-kb-datasource
+      DataSourceConfiguration:
+        Type: "S3"
+        S3Configuration:
+          BucketArn: !ImportValue DocumentBucketArn
+          InclusionPrefixes:
+            - docs/
