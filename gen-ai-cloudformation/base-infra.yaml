@@ -198,8 +198,11 @@ Resources:
               - Effect: Allow
                 Action:
                   - aoss:APIAccessAll
+                  - aoss:ListCollections
+                  - aoss:BatchGetCollection
                 Resource:
-                  - !Sub "arn:aws:aoss:${AWS::Region}:${AWS::AccountId}:collection/${VectorCollection}"
+                  - !Sub "arn:aws:aoss:${AWS::Region}:${AWS::AccountId}:collection/*"
+                  - !Sub "arn:aws:aoss:${AWS::Region}:${AWS::AccountId}:index/*/*"
               - Effect: Allow
                 Action:
                   - s3:GetObject
@@ -354,8 +357,11 @@ Resources:
               - Effect: Allow
                 Action:
                   - aoss:APIAccessAll
+                  - aoss:ListCollections
+                  - aoss:BatchGetCollection
                 Resource:
-                  - !Sub "arn:aws:aoss:${AWS::Region}:${AWS::AccountId}:collection/${VectorCollection}"
+                  - !Sub "arn:aws:aoss:${AWS::Region}:${AWS::AccountId}:collection/*"
+                  - !Sub "arn:aws:aoss:${AWS::Region}:${AWS::AccountId}:index/*/*"
         - PolicyName: KnowledgeBaseSync
           PolicyDocument:
             Version: "2012-10-17"
@@ -374,11 +380,6 @@ Resources:
         - !Sub "arn:${AWS::Partition}:iam::aws:policy/AmazonSageMakerFullAccess"
 
 Outputs:
-  VectorCollectionName:
-    Description: "Name for the Vector Collection"
-    Value: !Ref VectorCollection
-    Export:
-      Name: "VectorCollectionName"
   VectorCollectionArn:
     Description: "ARN for the Vector Collection"
     Value: !GetAtt VectorCollection.Arn
