@@ -159,7 +159,7 @@ Resources:
   BedrockVectorStoreRole:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: gen-ai-workshop-role
+      RoleName: bedrock-vector-store-role
       AssumeRolePolicyDocument:
         Version: "2012-10-17"
         Statement:
@@ -273,7 +273,8 @@ Resources:
               }
             ],
             "Principal": [
-              "arn:aws:iam::${AWS::AccountId}:role/gen-ai-workshop-role",
+              "arn:aws:iam::${AWS::AccountId}:role/bedrock-vector-store-role",
+              "arn:aws:iam::${AWS::AccountId}:role/sagemaker-instance-workshop-role",
               "arn:aws:iam::${AWS::AccountId}:root"
             ]
           }
@@ -310,6 +311,7 @@ Resources:
   WorkshopNotebookRole:
     Type: "AWS::IAM::Role"
     Properties:
+      RoleName: sagemaker-instance-workshop-role
       AssumeRolePolicyDocument:
         Version: "2012-10-17"
         Statement:
