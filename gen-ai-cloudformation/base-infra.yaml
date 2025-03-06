@@ -322,6 +322,8 @@ Resources:
             Principal:
               Service:
                 - "sagemaker.amazonaws.com"
+                - "bedrock.amazonaws.com"
+                - "cloudformation.amazonaws.com"
             Action:
               - "sts:AssumeRole"
             Condition:
@@ -340,6 +342,7 @@ Resources:
                 Resource:
                   - !GetAtt DocumentBucket.Arn
                   - !Sub "${DocumentBucket.Arn}/*"
+
         - PolicyName: SecurityGroupModification
           PolicyDocument:
             Version: "2012-10-17"
@@ -350,6 +353,7 @@ Resources:
                   - ec2:RevokeSecurityGroupIngress
                   - ec2:DescribeSecurityGroups
                 Resource: "*"
+
         - PolicyName: OpenSearchAccess
           PolicyDocument:
             Version: "2012-10-17"
@@ -362,6 +366,7 @@ Resources:
                 Resource:
                   - !Sub "arn:aws:aoss:${AWS::Region}:${AWS::AccountId}:collection/*"
                   - !Sub "arn:aws:aoss:${AWS::Region}:${AWS::AccountId}:index/*/*"
+
         - PolicyName: KnowledgeBaseSync
           PolicyDocument:
             Version: "2012-10-17"
@@ -375,6 +380,39 @@ Resources:
                   - !Sub "arn:aws:bedrock:${AWS::Region}::foundation-model/amazon.titan-embed-text-v1"
                   - !Sub "arn:aws:bedrock:${AWS::Region}::foundation-model/cohere.embed-english-v3"
                   - !Sub "arn:aws:bedrock:${AWS::Region}::foundation-model/cohere.embed-multilingual-v3"
+
+        - PolicyName: PassBedrockVectorStoreRole
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action: "iam:PassRole"
+                Resource: !Sub "arn:aws:iam::${AWS::AccountId}:role/bedrock-vector-store-role"
+
+        - PolicyName: BedrockKnowledgeBaseManagement
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - bedrock:*
+                Resource: "*"
+
+        - PolicyName: CloudFormationStackManagement
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - cloudformation:CreateStack
+                  - cloudformation:DescribeStacks
+                  - cloudformation:DeleteStack
+                  - cloudformation:UpdateStack
+                  - cloudformation:ListStacks
+                  - cloudformation:GetTemplate
+                  - cloudformation:GetTemplateSummary
+                Resource: "*"
+
       Path: "/"
       ManagedPolicyArns:
         - !Sub "arn:${AWS::Partition}:iam::aws:policy/AmazonSageMakerFullAccess"
