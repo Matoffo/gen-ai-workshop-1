@@ -16,7 +16,7 @@ While initial experimentation with GenAI and LLMs may seem straightforward, movi
 In this session, we will utilize several powerful AWS infrastructure components specifically designed to streamline your GenAI and LLM application development:
 
 So let us focus on current session topic and lets explore our infrastructure. 
-![image.png](attachment:image.png)
+![image.png](/image.png)
 
 - **Document Storage:** Amazon S3 will serve as our robust, scalable storage solution for managing large volumes of documents and data assets required for GenAI applications.
 
