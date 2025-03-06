@@ -20,7 +20,7 @@ So let us focus on current session topic and lets explore our infrastructure.
 
 - **Document Storage:** Amazon S3 will serve as our robust, scalable storage solution for managing large volumes of documents and data assets required for GenAI applications.
 
-- **Metadata Ingestion Pipeline:** AWS Bedrock offers comprehensive capabilities for metadata ingestion. Although Bedrock provides a default document parsing method that splits documents into fixed-size chunks, this typically yields suboptimal results. Instead, we will leverage semantic parsing during our workshop, offering superior outcomes by retaining meaningful context within documents. For production-grade implementations, significant customization based on your data context and use-case requirements is recommended. This topic will be explored in greater detail in the subsequent session.
+- **Knowledge Base Ingestion Pipeline:** AWS Bedrock offers comprehensive capabilities for metadata ingestion. Although Bedrock provides a default document parsing method that splits documents into fixed-size chunks, this typically yields suboptimal results. Instead, we will leverage semantic parsing during our workshop, offering superior outcomes by retaining meaningful context within documents. For production-grade implementations, significant customization based on your data context and use-case requirements is recommended. This topic will be explored in greater detail in the subsequent session.
 
 - **Knowledge Base:** AWS Bedrock will also be used as the knowledge base, allowing efficient indexing and retrieval of structured and unstructured data, supporting your application's accuracy and relevancy.
 
