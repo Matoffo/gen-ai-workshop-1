@@ -36,7 +36,7 @@ So let us focus on current session topic and lets explore our infrastructure.
 
 ## Upcoming Sessions (Production experience)
 
-### Session 2: Metadata Index Preparation
+### Session 2: Knowledge Base Index Preparation
 
 This session will delve deeper into:
 
