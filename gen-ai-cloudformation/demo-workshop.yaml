@@ -1,0 +1,472 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "CloudFormation template for GenAI Workshop infrastructure"
+Parameters:
+  ProjectName:
+    Type: String
+    Default: genai-workshop
+    Description: Project name for resource tagging
+  VpcCIDR:
+    Type: String
+    Default: 10.0.0.0/20
+    Description: CIDR block for VPC
+  FlowiseInstanceType:
+    Type: String
+    Default: r4.large
+    AllowedValues: [r4.large, r4.xlarge]
+    Description: EC2 instance type for Flowise
+  WorkshopNotebookInstanceType:
+    Type: String
+    Default: ml.t3.large
+    AllowedValues: [ml.t3.large, ml.t3.xlarge]
+    Description: SageMaker notebook instance type
+Mappings:
+  RegionMap:
+    us-east-1:
+      #      "AMI": "ami-04b4f1a9cf54c11d0"     # Ubuntu 24.04 - default AMI
+      "AMI": "ami-0f37db34ef5f75df4" # Ubuntu 24.04 - custom Flowise AMI
+
+Resources:
+  # VPC and Network Configuration
+  WorkshopVPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: !Ref VpcCIDR
+      EnableDnsHostnames: true
+      EnableDnsSupport: true
+      Tags:
+        - Key: Name
+          Value: !Sub ${ProjectName}-vpc
+  PublicSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref WorkshopVPC
+      CidrBlock: !Select [0, !Cidr [!Ref VpcCIDR, 4, 8]]
+      AvailabilityZone: !Select [0, !GetAZs ""]
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: Name
+          Value: !Sub ${ProjectName}-public-subnet-1
+  PublicSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref WorkshopVPC
+      CidrBlock: !Select [1, !Cidr [!Ref VpcCIDR, 4, 8]]
+      AvailabilityZone: !Select [1, !GetAZs ""]
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: Name
+          Value: !Sub ${ProjectName}-public-subnet-2
+  InternetGateway:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+        - Key: Name
+          Value: !Sub ${ProjectName}-igw
+  AttachGateway:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId: !Ref WorkshopVPC
+      InternetGatewayId: !Ref InternetGateway
+  PublicRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref WorkshopVPC
+      Tags:
+        - Key: Name
+          Value: !Sub ${ProjectName}-public-rt
+  PublicRoute:
+    Type: AWS::EC2::Route
+    DependsOn: AttachGateway
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref InternetGateway
+  PublicSubnet1RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PublicSubnet1
+      RouteTableId: !Ref PublicRouteTable
+  PublicSubnet2RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PublicSubnet2
+      RouteTableId: !Ref PublicRouteTable
+
+  # # S3 Bucket for Document Storage
+  DocumentBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub ${ProjectName}-docs-${AWS::AccountId}
+      VersioningConfiguration:
+        Status: Enabled
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+
+  # EC2 Instance for Flowise
+  FlowiseSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Security group for Flowise RAG instance
+      VpcId: !Ref WorkshopVPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 3000 # Flowise UI port
+          ToPort: 3000
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 22 # SSH port for EC2 instance coonect
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
+      Tags:
+        - Key: Name
+          Value: !Sub ${ProjectName}-flowise-sg
+  FlowiseInstance:
+    Type: AWS::EC2::Instance
+    Properties:
+      InstanceType: !Ref FlowiseInstanceType
+      ImageId: !FindInMap [RegionMap, !Ref "AWS::Region", "AMI"]
+      SubnetId: !Ref PublicSubnet1
+      SecurityGroupIds:
+        - !Ref FlowiseSecurityGroup
+      IamInstanceProfile: !Ref FlowiseInstanceProfile
+      BlockDeviceMappings:
+        - DeviceName: /dev/sda1
+          Ebs:
+            VolumeSize: 50 # 50GB
+            DeleteOnTermination: true
+      UserData: # Start the Flowise service on instance launch
+        Fn::Base64: !Sub |
+          #!/bin/bash
+          set -e
+
+          # Define username
+          FLOWISE_USER="matoffo"
+
+          # Generate a random 16-character password
+          FLOWISE_PASS=$(openssl rand -base64 12 | tr -dc 'A-Za-z0-9' | head -c 16)
+
+          # Store credentials in a file
+          echo "Flowise Username: $FLOWISE_USER" | tee /home/ubuntu/flowise_credentials.txt
+          echo "Flowise Password: $FLOWISE_PASS" | tee -a /home/ubuntu/flowise_credentials.txt
+
+          # Set permissions to secure the file
+          chmod 600 /home/ubuntu/flowise_credentials.txt
+          npx flowise start --DEBUG=true --FLOWISE_USERNAME=$FLOWISE_USER --FLOWISE_PASSWORD=$FLOWISE_PASS
+
+      Tags:
+        - Key: Name
+          Value: !Sub ${ProjectName}-flowise
+  FlowiseInstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Roles:
+        - !Ref BedrockVectorStoreRole
+
+  # IAM ROLE for Bedrock Vector Store
+  BedrockVectorStoreRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: bedrock-vector-store-role
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - bedrock.amazonaws.com
+                - sagemaker.amazonaws.com
+            Action: sts:AssumeRole
+            Condition:
+              StringEquals:
+                "aws:SourceAccount": !Sub "${AWS::AccountId}"
+              ArnLike:
+                "AWS:SourceArn": !Sub "arn:aws:bedrock:${AWS::Region}:${AWS::AccountId}:knowledge-base/*"
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonSageMakerFullAccess
+        - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
+      Policies:
+        - PolicyName: BedrockVectorStoreAccess
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - bedrock:ListFoundationModels
+                  - bedrock:ListCustomModels
+                Resource:
+                  - "*"
+              - Effect: Allow
+                Action:
+                  - bedrock:InvokeModel
+                Resource:
+                  - !Sub "arn:aws:bedrock:${AWS::Region}::foundation-model/amazon.titan-embed-text-v1"
+                  - !Sub "arn:aws:bedrock:${AWS::Region}::foundation-model/cohere.embed-english-v3"
+                  - !Sub "arn:aws:bedrock:${AWS::Region}::foundation-model/cohere.embed-multilingual-v3"
+              - Effect: Allow
+                Action:
+                  - aoss:APIAccessAll
+                  - aoss:ListCollections
+                  - aoss:BatchGetCollection
+                Resource:
+                  - !Sub "arn:aws:aoss:${AWS::Region}:${AWS::AccountId}:collection/*"
+                  - !Sub "arn:aws:aoss:${AWS::Region}:${AWS::AccountId}:index/*/*"
+              - Effect: Allow
+                Action:
+                  - s3:GetObject
+                  - s3:ListBucket
+                  - s3:PutObject
+                Resource:
+                  - !GetAtt DocumentBucket.Arn
+                  - !Sub "${DocumentBucket.Arn}/*"
+
+  # OpenSearch Collection for Vector Storage
+  VectorCollection:
+    Type: AWS::OpenSearchServerless::Collection
+    DependsOn:
+      - OpenSearchSecurityPolicy
+      - OpenSearchNetworkPolicy
+      - OpenSearchDataAccessPolicy
+    Properties:
+      Name: genai-vectors-collection
+      Description: Vector store collection for knowledge base
+      Type: VECTORSEARCH
+
+  OpenSearchSecurityPolicy:
+    Type: AWS::OpenSearchServerless::SecurityPolicy
+    Properties:
+      Name: !Sub "${ProjectName}-encryption-policy"
+      Type: encryption
+      Description: Encryption policy for OpenSearch Serverless
+      Policy: >-
+        {"Rules":[{"ResourceType":"collection","Resource":["collection/genai-vectors-collection"]}],"AWSOwnedKey":true}
+
+  OpenSearchNetworkPolicy:
+    Type: AWS::OpenSearchServerless::SecurityPolicy
+    Properties:
+      Name: !Sub "${ProjectName}-network-policy"
+      Type: network
+      Description: Network policy for OpenSearch Serverless
+      Policy: >-
+        [
+          {
+            "Rules": [
+              {
+                "Resource": [
+                  "collection/genai-vectors-collection"
+                ],
+                "ResourceType": "collection"
+              }
+            ],
+            "AllowFromPublic": true
+          }
+        ]
+
+  OpenSearchDataAccessPolicy:
+    Type: AWS::OpenSearchServerless::AccessPolicy
+    Properties:
+      Name: !Sub "${ProjectName}-data-policy"
+      Type: data
+      Description: Access policy for genai-vectors-workshop
+      Policy: !Sub >-
+        [
+          {
+            "Rules": [
+              {
+                "ResourceType": "index",
+                "Resource": ["index/*/*"],
+                "Permission": ["aoss:*"]
+              },
+              {
+                "ResourceType": "collection",
+                "Resource": ["collection/genai-vectors-collection"],
+                "Permission": ["aoss:*"]
+              }
+            ],
+            "Principal": [
+              "arn:aws:iam::${AWS::AccountId}:role/bedrock-vector-store-role",
+              "arn:aws:iam::${AWS::AccountId}:role/sagemaker-instance-workshop-role",
+              "arn:aws:iam::${AWS::AccountId}:root"
+            ]
+          }
+        ]
+
+  # Security group for SageMaker Notebook Instance
+  WorkshopNotebookSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Security group for SageMaker notebook instance
+      VpcId: !Ref WorkshopVPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: 0.0.0.0/0
+      Tags:
+        - Key: Name
+          Value: !Sub ${ProjectName}-notebook-sg
+
+  # SageMaker Notebook
+  WorkshopNotebookInstance:
+    Type: "AWS::SageMaker::NotebookInstance"
+    Properties:
+      SubnetId: !Ref PublicSubnet1
+      DirectInternetAccess: Enabled
+      SecurityGroupIds:
+        - !GetAtt WorkshopNotebookSecurityGroup.GroupId
+      InstanceType: !Ref WorkshopNotebookInstanceType
+      VolumeSizeInGB: 30
+      RoleArn: !GetAtt WorkshopNotebookRole.Arn
+      DefaultCodeRepository: "https://github.com/Matoffo/gen-ai-workshop-1.git"
+
+  WorkshopNotebookRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      RoleName: sagemaker-instance-workshop-role
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Principal:
+              Service:
+                - "sagemaker.amazonaws.com"
+                - "bedrock.amazonaws.com"
+                - "cloudformation.amazonaws.com"
+            Action:
+              - "sts:AssumeRole"
+            Condition:
+              StringEquals:
+                "aws:SourceAccount": !Sub "${AWS::AccountId}"
+      Policies:
+        - PolicyName: DocumentS3Access
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:GetObject
+                  - s3:ListBucket
+                  - s3:PutObject
+                Resource:
+                  - !GetAtt DocumentBucket.Arn
+                  - !Sub "${DocumentBucket.Arn}/*"
+
+        - PolicyName: EC2Access
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - ec2:AuthorizeSecurityGroupIngress
+                  - ec2:RevokeSecurityGroupIngress
+                  - ec2:DescribeSecurityGroups
+                  - ec2:DescribeInstances
+                  - ec2:DescribeInstanceStatus
+                  - ec2:GetConsoleOutput
+                Resource: "*"
+
+        - PolicyName: OpenSearchAccess
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - aoss:APIAccessAll
+                  - aoss:ListCollections
+                  - aoss:BatchGetCollection
+                Resource:
+                  - !Sub "arn:aws:aoss:${AWS::Region}:${AWS::AccountId}:collection/*"
+                  - !Sub "arn:aws:aoss:${AWS::Region}:${AWS::AccountId}:index/*/*"
+
+        - PolicyName: KnowledgeBaseSync
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - bedrock:ListFoundationModels
+                  - bedrock:ListCustomModels
+                  - bedrock:InvokeModel
+                Resource:
+                  - !Sub "arn:aws:bedrock:${AWS::Region}::foundation-model/amazon.titan-embed-text-v1"
+                  - !Sub "arn:aws:bedrock:${AWS::Region}::foundation-model/cohere.embed-english-v3"
+                  - !Sub "arn:aws:bedrock:${AWS::Region}::foundation-model/cohere.embed-multilingual-v3"
+
+        - PolicyName: PassBedrockVectorStoreRole
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action: "iam:PassRole"
+                Resource: !Sub "arn:aws:iam::${AWS::AccountId}:role/bedrock-vector-store-role"
+
+        - PolicyName: BedrockKnowledgeBaseManagement
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - bedrock:*
+                Resource: "*"
+
+        - PolicyName: CloudFormationStackManagement
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - cloudformation:CreateStack
+                  - cloudformation:DescribeStacks
+                  - cloudformation:DeleteStack
+                  - cloudformation:UpdateStack
+                  - cloudformation:ListStacks
+                  - cloudformation:GetTemplate
+                  - cloudformation:GetTemplateSummary
+                Resource: "*"
+
+      Path: "/"
+      ManagedPolicyArns:
+        - !Sub "arn:${AWS::Partition}:iam::aws:policy/AmazonSageMakerFullAccess"
+
+Outputs:
+  VectorCollectionArn:
+    Description: "ARN for the Vector Collection"
+    Value: !GetAtt VectorCollection.Arn
+    Export:
+      Name: "VectorCollectionArn"
+  BedrockVectorStoreRoleArn:
+    Description: "Role ARN for Bedrock Vector Store"
+    Value: !GetAtt BedrockVectorStoreRole.Arn
+    Export:
+      Name: "BedrockVectorStoreRoleArn"
+  DocumentBucketArn:
+    Description: ARN of the S3 bucket for document storage
+    Value: !GetAtt DocumentBucket.Arn
+    Export:
+      Name: "DocumentBucketArn"
+  DocumentBucketName:
+    Description: "Name of the S3 bucket for document storage"
+    Value: !Ref DocumentBucket
+  FlowiseInstancePublicDnsName:
+    Description: Public DNS name for Flowise instance
+    Value: !GetAtt FlowiseInstance.PublicDnsName
+  FlowiseURL:
+    Description: URL for accessing Flowise UI
+    Value: !Sub http://${FlowiseInstance.PublicDnsName}:3131
+  VPCId:
+    Description: VPC ID
+    Value: !Ref WorkshopVPC
+  PublicSubnet1:
+    Description: Public Subnet 1 ID
+    Value: !Ref PublicSubnet1
+  PublicSubnet2:
+    Description: Public Subnet 2 ID
+    Value: !Ref PublicSubnet2
+  WorkshopNotebookInstance:
+    Value: !Ref WorkshopNotebookInstance
