@@ -22,8 +22,7 @@ Parameters:
 Mappings:
   RegionMap:
     us-east-1:
-      #      "AMI": "ami-04b4f1a9cf54c11d0"     # Ubuntu 24.04 - default AMI
-      "AMI": "ami-0f37db34ef5f75df4" # Ubuntu 24.04 - custom Flowise AMI
+      "AMI": "ami-04b4f1a9cf54c11d0" # Ubuntu 24.04 - default AMI
 
 Resources:
   # VPC and Network Configuration
@@ -158,6 +157,14 @@ Resources:
 
           # Set permissions to secure the file
           chmod 600 /home/ubuntu/flowise_credentials.txt
+
+          apt update -y
+          apt install -y npm
+          curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash
+          \. "$HOME/.nvm/nvm.sh"
+
+          nvm install 20
+          npm install -g flowise
           npx flowise start --DEBUG=true --FLOWISE_USERNAME=$FLOWISE_USER --FLOWISE_PASSWORD=$FLOWISE_PASS
 
       Tags:
