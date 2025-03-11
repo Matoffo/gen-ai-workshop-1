@@ -357,7 +357,7 @@ Resources:
                   - !GetAtt DocumentBucket.Arn
                   - !Sub "${DocumentBucket.Arn}/*"
 
-        - PolicyName: SecurityGroupModification
+        - PolicyName: EC2Access
           PolicyDocument:
             Version: "2012-10-17"
             Statement:
@@ -366,6 +366,9 @@ Resources:
                   - ec2:AuthorizeSecurityGroupIngress
                   - ec2:RevokeSecurityGroupIngress
                   - ec2:DescribeSecurityGroups
+                  - ec2:DescribeInstances
+                  - ec2:DescribeInstanceStatus
+                  - ec2:GetConsoleOutput
                 Resource: "*"
 
         - PolicyName: OpenSearchAccess
