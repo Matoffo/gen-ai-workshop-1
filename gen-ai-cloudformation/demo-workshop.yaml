@@ -22,8 +22,7 @@ Parameters:
 Mappings:
   RegionMap:
     us-east-1:
-      #      "AMI": "ami-04b4f1a9cf54c11d0"     # Ubuntu 24.04 - default AMI
-      "AMI": "ami-0f37db34ef5f75df4" # Ubuntu 24.04 - custom Flowise AMI
+      "AMI": "ami-0a3ac0ad5d60abccf" # Ubuntu 24.04 - Matoffo Flowise AMI
 
 Resources:
   # VPC and Network Configuration
