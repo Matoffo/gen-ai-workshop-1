@@ -272,8 +272,8 @@
     {
       "id": "seqState_0",
       "position": {
-        "x": 209.34486815031968,
-        "y": 735.0953085595596
+        "x": 172.80549676267023,
+        "y": 750.1409320721211
       },
       "type": "customNode",
       "data": {
@@ -365,8 +365,8 @@
       "height": 253,
       "selected": false,
       "positionAbsolute": {
-        "x": 209.34486815031968,
-        "y": 735.0953085595596
+        "x": 172.80549676267023,
+        "y": 750.1409320721211
       },
       "dragging": false
     },
@@ -614,10 +614,10 @@
         ],
         "inputs": {
           "llmNodeName": "Converstaion",
-          "systemMessagePrompt": "You are an expert AWS architect assistant specialized in the AWS Well-Architected Framework. Your role is to answer user questions clearly, concisely, and accurately, relying solely on the information provided by the retriever tool. Do not use any information from outside sources or general training knowledge. If a query is unclear or ambiguous, ask clarifying questions to ensure accurate understanding before providing an answer. \n\nPolitely decline to answer queries not directly related to the AWS Well-Architected Framework.",
+          "systemMessagePrompt": "You are an expert financial analyst assistant specialized in analyzing company financial reports and statements. Your role is to answer user questions clearly, concisely, and accurately, relying exclusively on the information provided by the retriever tool. Do not incorporate any outside sources, personal assumptions, or general financial knowledge beyond what is explicitly provided. If a query is unclear or ambiguous, ask clarifying questions to ensure accurate understanding before providing an answer.\n\nIf the retrieved information is insufficient to confidently answer the user's query, clearly state that the provided content lacks the necessary details.\n\nPolitely decline to answer queries not directly related to financial reports, company financial statements, or financial analysis.\n",
           "messageHistory": "",
           "conversationHistorySelection": "all_messages",
-          "humanMessagePrompt": "Based exclusively on the retrieved chunks from the AWS Well-Architected Framework, generate a clear, concise, and accurate answer addressing the user's query. If necessary, explicitly reference specific pillars (Operational Excellence, Security, Reliability, Performance Efficiency, Cost Optimization, Sustainability) and provide relevant details or recommendations from the retrieved chunks to support your response.",
+          "humanMessagePrompt": "Generate a clear, concise, and accurate answer addressing the user's query based exclusively on the chunks retrieved from the provided financial reports and statements. Include relevant figures, metrics, or insights from the retrieved chunks to explicitly support your response. If the retrieved content lacks sufficient detail to fully address the user's query, explicitly state this limitation.\n",
           "sequentialNode": [
             "{{seqStart_0.data.instance}}"
           ],
@@ -995,7 +995,7 @@
         "inputAnchors": [],
         "inputs": {
           "region": "us-east-1",
-          "knoledgeBaseID": "HVLQ4Q0XTF",
+          "knoledgeBaseID": "JCH9MFUXLB",
           "query": "",
           "topK": 5,
           "searchType": "",
