@@ -867,7 +867,8 @@
         ],
         "inputs": {
           "tools": [
-            "{{retrieverTool_0.data.instance}}"
+            "{{retrieverTool_0.data.instance}}",
+            "{{googleCustomSearch_0.data.instance}}"
           ],
           "llmNode": "{{seqLLMNode_0.data.instance}}",
           "toolNodeName": "Tools",
@@ -1394,6 +1395,61 @@
         "x": 2442.8718816559463,
         "y": 284.1091284181021
       }
+    },
+    {
+      "id": "googleCustomSearch_0",
+      "position": {
+        "x": 1720.428338260715,
+        "y": 907.6915151921917
+      },
+      "type": "customNode",
+      "data": {
+        "id": "googleCustomSearch_0",
+        "label": "Google Custom Search",
+        "version": 1,
+        "name": "googleCustomSearch",
+        "type": "GoogleCustomSearchAPI",
+        "baseClasses": [
+          "GoogleCustomSearchAPI",
+          "Tool",
+          "StructuredTool",
+          "Runnable"
+        ],
+        "category": "Tools",
+        "description": "Wrapper around Google Custom Search API - a real-time API to access Google search results",
+        "inputParams": [
+          {
+            "label": "Connect Credential",
+            "name": "credential",
+            "type": "credential",
+            "credentialNames": [
+              "googleCustomSearchApi"
+            ],
+            "id": "googleCustomSearch_0-input-credential-credential"
+          }
+        ],
+        "inputAnchors": [],
+        "inputs": {},
+        "outputAnchors": [
+          {
+            "id": "googleCustomSearch_0-output-googleCustomSearch-GoogleCustomSearchAPI|Tool|StructuredTool|Runnable",
+            "name": "googleCustomSearch",
+            "label": "GoogleCustomSearchAPI",
+            "description": "Wrapper around Google Custom Search API - a real-time API to access Google search results",
+            "type": "GoogleCustomSearchAPI | Tool | StructuredTool | Runnable"
+          }
+        ],
+        "outputs": {},
+        "selected": false
+      },
+      "width": 300,
+      "height": 275,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 1720.428338260715,
+        "y": 907.6915151921917
+      },
+      "dragging": false
     }
   ],
   "edges": [
@@ -1468,6 +1524,14 @@
       "targetHandle": "seqEnd_0-input-sequentialNode-Agent | Condition | LLMNode | ToolNode | CustomFunction | ExecuteFlow",
       "type": "buttonedge",
       "id": "seqLLMNode_1-seqLLMNode_1-output-seqLLMNode-LLMNode-seqEnd_0-seqEnd_0-input-sequentialNode-Agent | Condition | LLMNode | ToolNode | CustomFunction | ExecuteFlow"
+    },
+    {
+      "source": "googleCustomSearch_0",
+      "sourceHandle": "googleCustomSearch_0-output-googleCustomSearch-GoogleCustomSearchAPI|Tool|StructuredTool|Runnable",
+      "target": "seqToolNode_0",
+      "targetHandle": "seqToolNode_0-input-tools-Tool",
+      "type": "buttonedge",
+      "id": "googleCustomSearch_0-googleCustomSearch_0-output-googleCustomSearch-GoogleCustomSearchAPI|Tool|StructuredTool|Runnable-seqToolNode_0-seqToolNode_0-input-tools-Tool"
     }
   ]
 }
