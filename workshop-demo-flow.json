@@ -72,7 +72,7 @@
         "selected": false
       },
       "width": 300,
-      "height": 382,
+      "height": 383,
       "positionAbsolute": {
         "x": 919,
         "y": 524
@@ -125,7 +125,7 @@
         "selected": false
       },
       "width": 300,
-      "height": 251,
+      "height": 253,
       "positionAbsolute": {
         "x": 180.83833288358983,
         "y": 415.2713833183047
@@ -261,7 +261,7 @@
         "selected": false
       },
       "width": 300,
-      "height": 764,
+      "height": 766,
       "selected": false,
       "positionAbsolute": {
         "x": 505.2951151500571,
@@ -362,7 +362,7 @@
         "selected": false
       },
       "width": 300,
-      "height": 251,
+      "height": 253,
       "selected": false,
       "positionAbsolute": {
         "x": 172.80549676267023,
@@ -614,10 +614,10 @@
         ],
         "inputs": {
           "llmNodeName": "Converstaion",
-          "systemMessagePrompt": "You are an expert financial analyst assistant specialized in analyzing company financial reports and statements. Your role is to answer user questions clearly, concisely, and accurately, relying exclusively on information retrieved directly from the knowledge base using the retriever tool. Always perform a new retrieval from the knowledge base for each user query, even if the question appears related to previous queries or context. Do not rely solely on conversation history, outside sources, general knowledge, or personal assumptions.\n\nIf a query is unclear or ambiguous, ask clarifying questions to ensure accurate understanding before providing an answer.\n\nIf the retrieval does not return sufficient details to confidently answer the user's query, explicitly state this limitation.\n\nPolitely decline to answer queries not directly related to financial reports, company financial statements, or financial analysis.\n",
+          "systemMessagePrompt": "You are an expert financial analyst assistant specialized in analyzing company financial reports and statements. Your task is to answer user questions clearly, concisely, and accurately, intelligently deciding when to rely on previously retrieved information from conversation history and when to perform a fresh retrieval from the knowledge base.\n\nPrinciples to follow:\n- **Prioritize efficiency and accuracy:** Retrieve new information only if needed. Avoid redundant retrievals.\n- **Leverage conversation history:** Use previously retrieved information for clarifications, follow-up questions, and comparisons if it's sufficient.\n- **Perform retrieval when needed:** Query the knowledge base when the user asks about new topics, companies, periods, or information not covered adequately in the history.\n- **Acknowledge limitations clearly:** If retrieved or historical information is insufficient to confidently answer, explicitly state this.\n\nExamples of intelligent behavior:\n- User: \"How did Apple perform last quarter?\"  \n  (You query the knowledge base.)\n- User: \"What about Amazon?\"  \n  (You perform a new retrieval, as it's a new company.)\n- User: \"Compare Apple and Amazon.\"  \n  (You rely on previously retrieved information without a new retrieval.)\n- User: \"Can you clarify Apple's revenue number again?\"  \n  (You reuse previously retrieved information without querying again.)\n\nDo not rely on external knowledge or personal assumptions beyond the provided information or retrieved data.\n",
           "messageHistory": "",
           "conversationHistorySelection": "all_messages",
-          "humanMessagePrompt": "Generate a clear, concise, and accurate answer addressing the user's query based exclusively on the chunks retrieved from the provided financial reports and statements. Include relevant figures, metrics, or insights from the retrieved chunks to explicitly support your response. If the retrieved content lacks sufficient detail to fully address the user's query, explicitly state this limitation.\n",
+          "humanMessagePrompt": "Generate a clear, concise, and accurate answer to the user's query. Decide intelligently whether to rely on previously retrieved information from conversation history or to query the knowledge base. Provide relevant figures, metrics, or insights explicitly to support your response. Clearly state if the information available is insufficient to fully answer the query.\n",
           "sequentialNode": [
             "{{seqStart_0.data.instance}}"
           ],
@@ -639,7 +639,7 @@
         "selected": false
       },
       "width": 300,
-      "height": 431,
+      "height": 433,
       "selected": false,
       "dragging": false,
       "positionAbsolute": {
@@ -694,8 +694,8 @@
     {
       "id": "seqToolNode_0",
       "position": {
-        "x": 2046.8260153590095,
-        "y": 79.97388618395998
+        "x": 2055.6877932958582,
+        "y": 146.50224320296707
       },
       "type": "customNode",
       "data": {
@@ -867,8 +867,7 @@
         ],
         "inputs": {
           "tools": [
-            "{{retrieverTool_0.data.instance}}",
-            "{{googleCustomSearch_0.data.instance}}"
+            "{{retrieverTool_0.data.instance}}"
           ],
           "llmNode": "{{seqLLMNode_0.data.instance}}",
           "toolNodeName": "Tools",
@@ -891,10 +890,10 @@
         "selected": false
       },
       "width": 300,
-      "height": 528,
+      "height": 529,
       "positionAbsolute": {
-        "x": 2046.8260153590095,
-        "y": 79.97388618395998
+        "x": 2055.6877932958582,
+        "y": 146.50224320296707
       },
       "selected": false,
       "dragging": false
@@ -902,7 +901,7 @@
     {
       "id": "awsBedrockKBRetriever_0",
       "position": {
-        "x": 1135.6661679923209,
+        "x": 1134.148324579742,
         "y": -278.5467835396697
       },
       "type": "customNode",
@@ -996,7 +995,7 @@
         "inputAnchors": [],
         "inputs": {
           "region": "us-east-1",
-          "knoledgeBaseID": "OXBKW0L0UC",
+          "knoledgeBaseID": "UDAL6SCEOG",
           "query": "",
           "topK": 5,
           "searchType": "",
@@ -1015,11 +1014,11 @@
         "selected": false
       },
       "width": 300,
-      "height": 620,
+      "height": 622,
       "selected": false,
       "dragging": false,
       "positionAbsolute": {
-        "x": 1135.6661679923209,
+        "x": 1134.148324579742,
         "y": -278.5467835396697
       }
     },
@@ -1111,7 +1110,7 @@
         "selected": false
       },
       "width": 300,
-      "height": 654,
+      "height": 656,
       "selected": false,
       "positionAbsolute": {
         "x": 1596.4306525893867,
@@ -1388,68 +1387,13 @@
         "selected": false
       },
       "width": 300,
-      "height": 431,
+      "height": 433,
       "selected": false,
       "dragging": false,
       "positionAbsolute": {
         "x": 2442.8718816559463,
         "y": 284.1091284181021
       }
-    },
-    {
-      "id": "googleCustomSearch_0",
-      "position": {
-        "x": 1720.428338260715,
-        "y": 907.6915151921917
-      },
-      "type": "customNode",
-      "data": {
-        "id": "googleCustomSearch_0",
-        "label": "Google Custom Search",
-        "version": 1,
-        "name": "googleCustomSearch",
-        "type": "GoogleCustomSearchAPI",
-        "baseClasses": [
-          "GoogleCustomSearchAPI",
-          "Tool",
-          "StructuredTool",
-          "Runnable"
-        ],
-        "category": "Tools",
-        "description": "Wrapper around Google Custom Search API - a real-time API to access Google search results",
-        "inputParams": [
-          {
-            "label": "Connect Credential",
-            "name": "credential",
-            "type": "credential",
-            "credentialNames": [
-              "googleCustomSearchApi"
-            ],
-            "id": "googleCustomSearch_0-input-credential-credential"
-          }
-        ],
-        "inputAnchors": [],
-        "inputs": {},
-        "outputAnchors": [
-          {
-            "id": "googleCustomSearch_0-output-googleCustomSearch-GoogleCustomSearchAPI|Tool|StructuredTool|Runnable",
-            "name": "googleCustomSearch",
-            "label": "GoogleCustomSearchAPI",
-            "description": "Wrapper around Google Custom Search API - a real-time API to access Google search results",
-            "type": "GoogleCustomSearchAPI | Tool | StructuredTool | Runnable"
-          }
-        ],
-        "outputs": {},
-        "selected": false
-      },
-      "width": 300,
-      "height": 275,
-      "selected": false,
-      "positionAbsolute": {
-        "x": 1720.428338260715,
-        "y": 907.6915151921917
-      },
-      "dragging": false
     }
   ],
   "edges": [
@@ -1524,14 +1468,6 @@
       "targetHandle": "seqEnd_0-input-sequentialNode-Agent | Condition | LLMNode | ToolNode | CustomFunction | ExecuteFlow",
       "type": "buttonedge",
       "id": "seqLLMNode_1-seqLLMNode_1-output-seqLLMNode-LLMNode-seqEnd_0-seqEnd_0-input-sequentialNode-Agent | Condition | LLMNode | ToolNode | CustomFunction | ExecuteFlow"
-    },
-    {
-      "source": "googleCustomSearch_0",
-      "sourceHandle": "googleCustomSearch_0-output-googleCustomSearch-GoogleCustomSearchAPI|Tool|StructuredTool|Runnable",
-      "target": "seqToolNode_0",
-      "targetHandle": "seqToolNode_0-input-tools-Tool",
-      "type": "buttonedge",
-      "id": "googleCustomSearch_0-googleCustomSearch_0-output-googleCustomSearch-GoogleCustomSearchAPI|Tool|StructuredTool|Runnable-seqToolNode_0-seqToolNode_0-input-tools-Tool"
     }
   ]
 }
